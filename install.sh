@@ -87,6 +87,7 @@ mkdir -p "$ANGIE_DIR/http.d"
 mkdir -p "$ANGIE_DIR/logs"
 mkdir -p "$ANGIE_DIR/acme"
 mkdir -p "$ANGIE_DIR/html/default"
+mkdir -p "$HOME/.config/containers/systemd"
 
 step "Extracting angie.conf"
 podman run --rm docker.angie.software/angie:minimal cat /etc/angie/angie.conf > "$ANGIE_DIR/angie.conf"
