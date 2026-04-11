@@ -113,5 +113,6 @@ export PATH="$PNPM_HOME:$PATH"
 pnpm env use --global lts
 
 step "Loading systemd units"
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 systemctl --user daemon-reload
 systemctl --user start boxctl-angie
