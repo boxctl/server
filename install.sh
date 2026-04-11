@@ -70,10 +70,10 @@ echo -e "${BOLD}${ACCENT}DOMAIN    : ${RESET}${DOMAIN}"
 echo ""
 
 step "Updating repo"
-sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
 
 step "Installing essential packages"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq build-essential git podman
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q build-essential git podman
 
 step "Enabling ip_unprivileged_port_start"
 echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee /etc/sysctl.d/99-boxctl-unprivileged-ports.conf > /dev/null
