@@ -108,7 +108,8 @@ sed "s/__DOMAIN__/$DOMAIN/g" "$HOME/.boxctl/src/angie/http.d/__DOMAIN__.conf" > 
 
 step "Installing pnpm"
 curl -fsSL https://get.pnpm.io/install.sh | sh -
-source "$HOME/.bashrc"
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$PNPM_HOME:$PATH"
 pnpm env use --global lts
 
 step "Loading systemd units"
