@@ -8,6 +8,8 @@
 # Usage:
 # curl -fsSLo- "https://raw.githubusercontent.com/boxctl/server/refs/heads/main/setup.sh" | bash
 
+set -euo pipefail
+
 ANGIE_DIR="$HOME/boxctl/angie"
 DOMAIN=""
 
@@ -38,8 +40,6 @@ if [[ "$EUID" -eq 0 ]]; then
 	exit 1
 fi
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
-
-set -euo pipefail
 
 echo -e "${ACCENT}
   ▄█▄▄▄█▄    
@@ -88,6 +88,21 @@ mkdir -p "$ANGIE_DIR/logs"
 mkdir -p "$ANGIE_DIR/acme"
 mkdir -p "$ANGIE_DIR/html/default"
 
-# step "Writing default Angie HTML files"
-# git clone -q --depth 1 https://github.com/boxctl/angie-default-html-template "$ANGIE_DIR/html/default"
-# rm -rf "$ANGIE_DIR/html/default/.git"
+step "Extracting angie.conf"
+podman run --rm docker.angie.software/angie:minimal cat /etc/angie/angie.conf > "$ANGIE_DIR/angie.conf"
+
+step "Creating boxctl network"
+podman network exists boxctl || podman network create boxctl
+
+step "Downloading required files"
+rm -rf "$HOME/.boxctl"
+git clone -q --depth 1 https://github.com/boxctl/server "$HOME/.boxctl"
+
+step "Writing default files"
+cp -rf "$HOME/.boxctl/src/angie/html/default/." "$ANGIE_DIR/html/default/"
+cp -rf "$HOME/.boxctl/src/angie/html/default/." "$ANGIE_DIR/html/default/"
+cp -rf "$HOME/.boxctl/src/systemd/." "$HOME/.config/containers/systemd/"
+
+step "Loading systemd units"
+systemctl --user daemon-reload
+systemctl --user start boxctl-angie

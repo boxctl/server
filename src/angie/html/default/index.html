@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Boxctl</title>
+        <link rel="shortcut icon" href="./icon.svg" type="image/svg+xml" />
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+            }
+
+            :root {
+                --bg-color: #fafafa;
+                --text-color: #0a0a0a;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg-color: #0a0a0a;
+                    --text-color: #fafafa;
+
+                    color-scheme: dark;
+                }
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background-color: var(--bg-color);
+                color: var(--text-color);
+                padding: 24px;
+            }
+            svg {
+                height: auto;
+                width: 100%;
+                max-width: 192px;
+            }
+        </style>
+    </head>
+    <body>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="68"
+            height="16"
+            fill="none"
+            viewBox="0 0 68 16"
+        >
+            <path
+                fill="#f54900"
+                d="M18 16H4v-2h14zM8 2h6V0h2v2h2v2H4v10H2v-2H0V6h2V4h2V2h2V0h2zm12 4h2v6h-2v2h-2V4h2z"
+            />
+            <path fill="#f54900" d="M9 12H7V8h2zm6 0h-2V8h2z" />
+            <path
+                fill="currentColor"
+                fill-rule="evenodd"
+                d="M28 5h4v8h-6V3h2zm0 6h2V7h-2zm12 2h-6V5h6zm-4-2h2V7h-2z"
+                clip-rule="evenodd"
+            />
+            <path
+                fill="currentColor"
+                d="M44 13h-2v-3h2zm4 0h-2v-3h2zm-2-3h-2V8h2zm-2-2h-2V5h2zm4 0h-2V5h2zm4 3h4v2h-6V7h2zm4-4h-4V5h4zm4-2h2v2h-2v4h2v2h-4V3h2zm8 8h-2v-2h2zm-2-2h-2V3h2z"
+            />
+        </svg>
+    </body>
+</html>
