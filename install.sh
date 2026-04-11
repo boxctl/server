@@ -6,7 +6,7 @@
 # https://github.com/boxctl/server
 
 # Usage:
-# curl -fsSLo- "https://raw.githubusercontent.com/boxctl/server/refs/heads/main/setup.sh" | bash
+# curl -fsSLo- "https://raw.githubusercontent.com/boxctl/server/refs/heads/main/install.sh" | bash
 
 set -euo pipefail
 
@@ -100,8 +100,15 @@ git clone -q --depth 1 https://github.com/boxctl/server "$HOME/.boxctl"
 
 step "Writing default files"
 cp -rf "$HOME/.boxctl/src/angie/html/default/." "$ANGIE_DIR/html/default/"
-cp -rf "$HOME/.boxctl/src/angie/html/default/." "$ANGIE_DIR/html/default/"
+cp -rf "$HOME/.boxctl/src/angie/http.d/00.boxctl.default.conf" "$ANGIE_DIR/http.d/00.boxctl.default.conf"
+cp -rf "$HOME/.boxctl/src/angie/http.d/__DOMAIN__.conf" "$ANGIE_DIR/http.d/$DOMAIN.conf"
 cp -rf "$HOME/.boxctl/src/systemd/." "$HOME/.config/containers/systemd/"
+sed "s/__DOMAIN__/$DOMAIN/g" "$HOME/.boxctl/src/angie/http.d/__DOMAIN__.conf" > "$ANGIE_DIR/http.d/$DOMAIN.conf"
+
+step "Installing pnpm"
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+source "$HOME/.bashrc"
+pnpm env use --global lts
 
 step "Loading systemd units"
 systemctl --user daemon-reload
