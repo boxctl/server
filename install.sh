@@ -116,6 +116,8 @@ step "Creating default directories"
 sudo mkdir -p "/etc/angie/html/boxctl"
 sudo setfacl -R -m u:$(id -un):rwX /etc/angie/html/boxctl
 sudo setfacl -d -m u:$(id -un):rwX /etc/angie/html/boxctl
+sudo setfacl -R -m u:$(id -un):rwX /etc/angie/http.d/
+sudo setfacl -d -m u:$(id -un):rwX /etc/angie/http.d/
 mkdir -p "$HOME/.config/containers/systemd"
 
 step "Writing default files"
@@ -123,7 +125,9 @@ sudo cp -rf "$HOME/.boxctl/src/etc/angie/html/boxctl/." "/etc/angie/html/boxctl/
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/00.boxctl.default.conf" "/etc/angie/http.d/00.boxctl.default.conf"
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
 # cp -rf "$HOME/.boxctl/src/systemd/." "$HOME/.config/containers/systemd/"
-sudo sed "s/__DOMAIN__/$DOMAIN/g" "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" > "/etc/angie/http.d/$DOMAIN.conf"
+sed "s/__DOMAIN__/$DOMAIN/g" "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" \
+| sudo tee "/etc/angie/http.d/$DOMAIN.conf" > /dev/null
+sudo systemctl enable angie --now
 
 step "Enabling linger"
 sudo loginctl enable-linger "$USER"
