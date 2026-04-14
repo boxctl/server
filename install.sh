@@ -24,22 +24,6 @@ step() { echo -e "${BOLD}${ACCENT}▶ ${PURPLE}$1${RESET}"; }
 error() { echo -e "${BOLD}${RED}▶ [ERROR]: $1${RESET}"; }
 warn() { echo -e "${BOLD}${YELLOW}▶ [WARNING]: $1${RESET}"; }
 
-if [[ ! -f /etc/os-release ]]; then
-	error "/etc/os-release not found!"
-	exit 1
-fi
-source /etc/os-release
-
-if ! sudo -v; then
-	error "sudo auth failed!"
-	exit 1
-fi
-if [[ "$EUID" -eq 0 ]]; then
-	error "Do not run this script as root user. Run it with a normal user with sudo access."
-	exit 1
-fi
-while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
-
 echo -e "${ACCENT}
   ▄█▄▄▄█▄    
 ▄█       █▄  ${RESET}█▄▄ ▄▄▄ ▄ ▄  ▄▄ █▄ █ ${ACCENT}
@@ -54,6 +38,11 @@ echo -e "${BOLD}${ACCENT}
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ${RESET}"
 
+if [[ ! -f /etc/os-release ]]; then
+	error "/etc/os-release not found!"
+	exit 1
+fi
+source /etc/os-release
 
 case "$ID-$VERSION_ID" in
     ubuntu-22.04|ubuntu-24.04|fedora-43|debian-13) ;;
@@ -63,6 +52,16 @@ case "$ID-$VERSION_ID" in
         exit 1
         ;;
 esac
+
+if ! sudo -v; then
+	error "sudo auth failed!"
+	exit 1
+fi
+if [[ "$EUID" -eq 0 ]]; then
+	error "Do not run this script as root user. Run it with a normal user with sudo access."
+	exit 1
+fi
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 step "Provide permanent domain name for Boxctl GUI."
 step "Only non-www domains or subdomains are supported."
@@ -79,7 +78,7 @@ done
 echo ""
 echo -e "${BOLD}${ACCENT}SERVER OS : ${RESET}${PRETTY_NAME}"
 echo -e "${BOLD}${ACCENT}DOMAIN    : ${RESET}${DOMAIN}"
-echo -e "${BOLD}${ACCENT}HOME    : ${RESET}${HOME}"
+echo -e "${BOLD}${ACCENT}HOME      : ${RESET}${HOME}"
 echo ""
 
 install_ubuntu_debian() {
