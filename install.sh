@@ -10,7 +10,6 @@
 
 set -euo pipefail
 
-ANGIE_DIR="$HOME/boxctl/angie"
 DOMAIN=""
 
 BOLD='\033[1m'
@@ -21,7 +20,7 @@ YELLOW='\033[38;2;250;204;21m'
 ACCENT='\033[38;2;234;88;12m'
 RESET='\033[0m'
 
-step() { echo -e "${BOLD}▶ ${PURPLE}$1${RESET}"; }
+step() { echo -e "${BOLD}${ACCENT}▶ ${PURPLE}$1${RESET}"; }
 error() { echo -e "${BOLD}${RED}▶ [ERROR]: $1${RESET}"; }
 warn() { echo -e "${BOLD}${YELLOW}▶ [WARNING]: $1${RESET}"; }
 
@@ -36,7 +35,7 @@ if ! sudo -v; then
 	exit 1
 fi
 if [[ "$EUID" -eq 0 ]]; then
-	error "Do not run this script as root. create a normal user instead."
+	error "Do not run this script as root user. Run it with a normal user with sudo access."
 	exit 1
 fi
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
@@ -55,64 +54,83 @@ echo -e "${BOLD}${ACCENT}
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ${RESET}"
 
-echo -e "${ACCENT}▶ ${RESET}${BOLD}Provide permanent domain name for Boxctl GUI.${RESET}"
-echo -e "${ACCENT}▶ ${RESET}${BOLD}Preferred: non-www domain or subdomain.${RESET}"
+
+case "$ID-$VERSION_ID" in
+    ubuntu-22.04|ubuntu-24.04|fedora-43|debian-13) ;;
+    *)
+        error "Unsupported OS: $PRETTY_NAME"
+        error "Supported: Ubuntu 22.04, Ubuntu 24.04, Fedora 43, Debian 13"
+        exit 1
+        ;;
+esac
+
+step "Provide permanent domain name for Boxctl GUI."
+step "Only non-www domains or subdomains are supported."
+step "You can set www domain after the setup through GUI."
+
 while true; do
-	read -rp "DOMAIN: " DOMAIN < /dev/tty
-	[[ -z "$DOMAIN" ]] && error "Domain cannot be empty." && continue
-	break
+    read -rp "DOMAIN: " DOMAIN < /dev/tty
+    DOMAIN="${DOMAIN// /}"
+    [[ -z "$DOMAIN" ]] && error "Domain cannot be empty." && continue
+    [[ "$DOMAIN" == www.* ]] && error "Use non-www domain." && continue
+    break
 done
 
 echo ""
 echo -e "${BOLD}${ACCENT}SERVER OS : ${RESET}${PRETTY_NAME}"
-echo -e "${BOLD}${ACCENT}ANGIE_DIR : ${RESET}${ANGIE_DIR}"
 echo -e "${BOLD}${ACCENT}DOMAIN    : ${RESET}${DOMAIN}"
+echo -e "${BOLD}${ACCENT}HOME    : ${RESET}${HOME}"
 echo ""
 
-step "Updating repo"
-sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
+install_ubuntu_debian() {
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    sudo curl -fsSLo /etc/apt/trusted.gpg.d/angie-signing.gpg https://angie.software/keys/angie-signing.gpg
+    echo "deb https://download.angie.software/angie/$ID/$VERSION_ID $VERSION_CODENAME main" \
+    | sudo tee /etc/apt/sources.list.d/angie.list > /dev/null
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git podman jq angie acl
+}
 
-step "Installing essential packages"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q build-essential git podman
+install_fedora() {
+    sudo tee /etc/yum.repos.d/angie.repo > /dev/null << 'EOF'
+[angie]
+name=Angie repo
+baseurl=https://download.angie.software/angie/fedora/$releasever/
+gpgcheck=1
+enabled=1
+gpgkey=https://angie.software/keys/angie-signing.gpg.asc
+EOF
+    sudo dnf install -y -q git podman jq angie acl
+}
 
-step "Enabling ip_unprivileged_port_start"
-echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee /etc/sysctl.d/99-boxctl-unprivileged-ports.conf > /dev/null
-sudo sysctl --system > /dev/null
-
-step "Enabling linger"
-sudo loginctl enable-linger "$USER"
-
-step "Creating default directories"
-mkdir -p "$ANGIE_DIR/http.d"
-mkdir -p "$ANGIE_DIR/logs"
-mkdir -p "$ANGIE_DIR/acme"
-mkdir -p "$ANGIE_DIR/html/default"
-mkdir -p "$HOME/.config/containers/systemd"
-
-step "Extracting angie.conf"
-podman run --rm docker.angie.software/angie:minimal cat /etc/angie/angie.conf > "$ANGIE_DIR/angie.conf"
-
-step "Creating boxctl network"
-podman network exists boxctl || podman network create boxctl
+step "Installing required packages for $PRETTY_NAME"
+case "$ID" in
+    ubuntu|debian) install_ubuntu_debian ;;
+    fedora)        install_fedora ;;
+esac
 
 step "Downloading required files"
 rm -rf "$HOME/.boxctl"
 git clone -q --depth 1 https://github.com/boxctl/server "$HOME/.boxctl"
 
+step "Creating default directories"
+sudo mkdir -p "/etc/angie/html/boxctl"
+sudo setfacl -R -m u:$(id -un):rwX /etc/angie/html/boxctl
+sudo setfacl -d -m u:$(id -un):rwX /etc/angie/html/boxctl
+mkdir -p "$HOME/.config/containers/systemd"
+
 step "Writing default files"
-cp -rf "$HOME/.boxctl/src/angie/html/default/." "$ANGIE_DIR/html/default/"
-cp -rf "$HOME/.boxctl/src/angie/http.d/00.boxctl.default.conf" "$ANGIE_DIR/http.d/00.boxctl.default.conf"
-cp -rf "$HOME/.boxctl/src/angie/http.d/__DOMAIN__.conf" "$ANGIE_DIR/http.d/$DOMAIN.conf"
-cp -rf "$HOME/.boxctl/src/systemd/." "$HOME/.config/containers/systemd/"
-sed "s/__DOMAIN__/$DOMAIN/g" "$HOME/.boxctl/src/angie/http.d/__DOMAIN__.conf" > "$ANGIE_DIR/http.d/$DOMAIN.conf"
+cp -rf "$HOME/.boxctl/src/etc/angie/html/boxctl/." "/etc/angie/html/boxctl/"
+cp -rf "$HOME/.boxctl/src/etc/angie/http.d/00.boxctl.default.conf" "/etc/angie/http.d/00.boxctl.default.conf"
+cp -rf "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
+# cp -rf "$HOME/.boxctl/src/systemd/." "$HOME/.config/containers/systemd/"
+sed "s/__DOMAIN__/$DOMAIN/g" "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" > "/etc/angie/http.d/$DOMAIN.conf"
+
+step "Enabling linger"
+sudo loginctl enable-linger "$USER"
 
 step "Installing pnpm"
 curl -fsSL https://get.pnpm.io/install.sh | sh -
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 pnpm env use --global lts
-
-step "Loading systemd units"
-export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-systemctl --user daemon-reload
-systemctl --user start boxctl-angie
