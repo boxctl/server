@@ -119,11 +119,11 @@ sudo setfacl -d -m u:$(id -un):rwX /etc/angie/html/boxctl
 mkdir -p "$HOME/.config/containers/systemd"
 
 step "Writing default files"
-cp -rf "$HOME/.boxctl/src/etc/angie/html/boxctl/." "/etc/angie/html/boxctl/"
-cp -rf "$HOME/.boxctl/src/etc/angie/http.d/00.boxctl.default.conf" "/etc/angie/http.d/00.boxctl.default.conf"
-cp -rf "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
+sudo cp -rf "$HOME/.boxctl/src/etc/angie/html/boxctl/." "/etc/angie/html/boxctl/"
+sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/00.boxctl.default.conf" "/etc/angie/http.d/00.boxctl.default.conf"
+sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
 # cp -rf "$HOME/.boxctl/src/systemd/." "$HOME/.config/containers/systemd/"
-sed "s/__DOMAIN__/$DOMAIN/g" "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" > "/etc/angie/http.d/$DOMAIN.conf"
+sudo sed "s/__DOMAIN__/$DOMAIN/g" "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" > "/etc/angie/http.d/$DOMAIN.conf"
 
 step "Enabling linger"
 sudo loginctl enable-linger "$USER"
