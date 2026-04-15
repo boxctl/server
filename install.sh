@@ -113,15 +113,15 @@ rm -rf "$HOME/.boxctl"
 git clone -q --depth 1 https://github.com/boxctl/server "$HOME/.boxctl"
 
 step "Creating default directories"
-sudo mkdir -p "/etc/angie/html/boxctl"
-sudo setfacl -R -m u:$(id -un):rwX /etc/angie/html/boxctl
-sudo setfacl -d -m u:$(id -un):rwX /etc/angie/html/boxctl
+sudo mkdir -p "/etc/angie/web/boxctl"
+sudo setfacl -R -m u:$(id -un):rwX /etc/angie/web/boxctl
+sudo setfacl -d -m u:$(id -un):rwX /etc/angie/web/boxctl
 sudo setfacl -R -m u:$(id -un):rwX /etc/angie/http.d/
 sudo setfacl -d -m u:$(id -un):rwX /etc/angie/http.d/
 mkdir -p "$HOME/.config/containers/systemd"
 
 step "Writing default files"
-sudo cp -rf "$HOME/.boxctl/src/etc/angie/html/boxctl/." "/etc/angie/html/boxctl/"
+sudo cp -rf "$HOME/.boxctl/src/etc/angie/web/boxctl/." "/etc/angie/web/boxctl/"
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/00.boxctl.default.conf" "/etc/angie/http.d/00.boxctl.default.conf"
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
 # cp -rf "$HOME/.boxctl/src/systemd/." "$HOME/.config/containers/systemd/"
