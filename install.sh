@@ -148,10 +148,8 @@ sed -i "s|__PATH__|$PATH|g" "$HOME/.config/systemd/user/boxctl.service"
 sudo mv "/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
 
 step "Enabling linger"
-sudo loginctl enable-linger "$USER"
-
-step "Enabling linger"
-sudo loginctl enable-linger "$USER"
+sudo loginctl enable-linger "$(id -un)"
+sudo systemctl start "user@$(id -u).service"
 
 step "Starting services"
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
