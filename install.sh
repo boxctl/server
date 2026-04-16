@@ -45,12 +45,12 @@ fi
 source /etc/os-release
 
 case "$ID-$VERSION_ID" in
-    ubuntu-22.04|ubuntu-24.04|fedora-43|debian-13) ;;
-    *)
-        error "Unsupported OS: $PRETTY_NAME"
-        error "Supported: Ubuntu 22.04, Ubuntu 24.04, Fedora 43, Debian 13"
-        exit 1
-        ;;
+ubuntu-22.04 | ubuntu-24.04 | fedora-43 | debian-13) ;;
+*)
+	error "Unsupported OS: $PRETTY_NAME"
+	error "Supported: Ubuntu 22.04, Ubuntu 24.04, Fedora 43, Debian 13"
+	exit 1
+	;;
 esac
 
 if ! sudo -v; then
@@ -61,18 +61,22 @@ if [[ "$EUID" -eq 0 ]]; then
 	error "Do not run this script as root user. Run it with a normal user with sudo access."
 	exit 1
 fi
-while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+while true; do
+	sudo -n true
+	sleep 60
+	kill -0 "$$" || exit
+done 2>/dev/null &
 
 step "Provide permanent domain name for Boxctl GUI."
 step "Only non-www domains or subdomains are supported."
 step "You can set www domain after the setup through GUI."
 
 while true; do
-    read -rp "DOMAIN: " DOMAIN < /dev/tty
-    DOMAIN="${DOMAIN// /}"
-    [[ -z "$DOMAIN" ]] && error "Domain cannot be empty." && continue
-    [[ "$DOMAIN" == www.* ]] && error "Use non-www domain." && continue
-    break
+	read -rp "DOMAIN: " DOMAIN </dev/tty
+	DOMAIN="${DOMAIN// /}"
+	[[ -z "$DOMAIN" ]] && error "Domain cannot be empty." && continue
+	[[ "$DOMAIN" == www.* ]] && error "Use non-www domain." && continue
+	break
 done
 
 echo ""
@@ -82,16 +86,16 @@ echo -e "${BOLD}${ACCENT}HOME      : ${RESET}${HOME}"
 echo ""
 
 install_ubuntu_debian() {
-    sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
-    sudo curl -fsSLo /etc/apt/trusted.gpg.d/angie-signing.gpg https://angie.software/keys/angie-signing.gpg
-    echo "deb https://download.angie.software/angie/$ID/$VERSION_ID $VERSION_CODENAME main" \
-    | sudo tee /etc/apt/sources.list.d/angie.list > /dev/null
-    sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git podman jq angie acl
+	sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+	sudo curl -fsSLo /etc/apt/trusted.gpg.d/angie-signing.gpg https://angie.software/keys/angie-signing.gpg
+	echo "deb https://download.angie.software/angie/$ID/$VERSION_ID $VERSION_CODENAME main" |
+		sudo tee /etc/apt/sources.list.d/angie.list >/dev/null
+	sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+	sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git podman jq angie acl
 }
 
 install_fedora() {
-    sudo tee /etc/yum.repos.d/angie.repo > /dev/null << 'EOF'
+	sudo tee /etc/yum.repos.d/angie.repo >/dev/null <<'EOF'
 [angie]
 name=Angie repo
 baseurl=https://download.angie.software/angie/fedora/$releasever/
@@ -99,13 +103,13 @@ gpgcheck=1
 enabled=1
 gpgkey=https://angie.software/keys/angie-signing.gpg.asc
 EOF
-    sudo dnf install -y -q git podman jq angie acl
+	sudo dnf install -y -q git podman jq angie acl
 }
 
 step "Installing required packages for $PRETTY_NAME"
 case "$ID" in
-    ubuntu|debian) install_ubuntu_debian ;;
-    fedora)        install_fedora ;;
+ubuntu | debian) install_ubuntu_debian ;;
+fedora) install_fedora ;;
 esac
 
 step "Downloading required files"
@@ -122,11 +126,14 @@ mkdir -p "$HOME/.config/containers/systemd"
 
 step "Writing default files"
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/web/boxctl/." "/etc/angie/web/boxctl/"
-sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/00.boxctl.default.conf" "/etc/angie/http.d/00.boxctl.default.conf"
-sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
-# cp -rf "$HOME/.boxctl/src/systemd/." "$HOME/.config/containers/systemd/"
-sed "s/__DOMAIN__/$DOMAIN/g" "$HOME/.boxctl/src/etc/angie/http.d/__DOMAIN__.conf" \
-| sudo tee "/etc/angie/http.d/$DOMAIN.conf" > /dev/null
+sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/." "/etc/angie/http.d/"
+cp -rf "$HOME/.boxctl/src/home/boxadmin/.config/systemd/user/boxctl-sockets-dir.service" "$HOME/.config/systemd/user/boxctl-sockets-dir.service"
+sed \
+	-e "s/__DOMAIN__/$DOMAIN/g" \
+	-e "s/__UPSTREAM__/127.0.0.1:8008/g" \
+	"/etc/angie/http.d/__DOMAIN__.conf" |
+	sudo tee "/etc/angie/http.d/$DOMAIN.conf" >/dev/null
+sudo rm "/etc/angie/http.d/__DOMAIN__.conf"
 sudo systemctl enable angie --now
 
 step "Enabling linger"
