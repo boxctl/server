@@ -86,12 +86,12 @@ echo -e "${BOLD}${ACCENT}HOME      : ${RESET}${HOME}"
 echo ""
 
 install_ubuntu_debian() {
-	sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+	sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
 	sudo curl -fsSLo /etc/apt/trusted.gpg.d/angie-signing.gpg https://angie.software/keys/angie-signing.gpg
 	echo "deb https://download.angie.software/angie/$ID/$VERSION_ID $VERSION_CODENAME main" |
 		sudo tee /etc/apt/sources.list.d/angie.list >/dev/null
-	sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
-	sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git podman jq angie acl
+	sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
+	sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q git podman jq angie acl
 }
 
 install_fedora() {
