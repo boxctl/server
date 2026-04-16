@@ -135,6 +135,11 @@ sed \
 	"/etc/angie/http.d/__DOMAIN__.conf" |
 	sudo tee "/etc/angie/http.d/$DOMAIN.conf" >/dev/null
 sudo rm "/etc/angie/http.d/__DOMAIN__.conf"
+
+step "Strrting services"
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+systemctl --user daemon-reload
+systemctl --user enable boxctl-sockets-dir.service --now
 sudo systemctl enable angie --now
 
 step "Enabling linger"
