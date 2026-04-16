@@ -106,11 +106,21 @@ EOF
 	sudo dnf install -y -q git podman jq angie acl
 }
 
+install_pnpm() {
+	curl -fsSL https://get.pnpm.io/install.sh | sh -
+	export PNPM_HOME="$HOME/.local/share/pnpm"
+	export PATH="$PNPM_HOME:$PATH"
+	pnpm env use --global lts
+}
+
 step "Installing required packages for $PRETTY_NAME"
 case "$ID" in
 ubuntu | debian) install_ubuntu_debian ;;
 fedora) install_fedora ;;
 esac
+
+step "Installing pnpm"
+install_pnpm
 
 step "Downloading required files"
 rm -rf "$HOME/.boxctl"
@@ -118,35 +128,33 @@ git clone -q --depth 1 https://github.com/boxctl/server "$HOME/.boxctl"
 
 step "Creating default directories"
 sudo mkdir -p "/etc/angie/web/boxctl"
+mkdir -p "$HOME/.config/systemd/user"
+
+step "Setting permissions"
 sudo setfacl -R -m u:$(id -un):rwX /etc/angie/web/boxctl
 sudo setfacl -d -m u:$(id -un):rwX /etc/angie/web/boxctl
 sudo setfacl -R -m u:$(id -un):rwX /etc/angie/http.d/
 sudo setfacl -d -m u:$(id -un):rwX /etc/angie/http.d/
-mkdir -p "$HOME/.config/containers/systemd"
-mkdir -p "$HOME/.config/systemd/user"
 
 step "Writing default files"
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/web/boxctl/." "/etc/angie/web/boxctl/"
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/." "/etc/angie/http.d/"
-cp -rf "$HOME/.boxctl/src/home/boxadmin/.config/systemd/user/boxctl-sockets-dir.service" "$HOME/.config/systemd/user/boxctl-sockets-dir.service"
-sed \
-	-e "s/__DOMAIN__/$DOMAIN/g" \
-	-e "s/__UPSTREAM__/127.0.0.1:8008/g" \
-	"/etc/angie/http.d/__DOMAIN__.conf" |
-	sudo tee "/etc/angie/http.d/$DOMAIN.conf" >/dev/null
-sudo rm "/etc/angie/http.d/__DOMAIN__.conf"
+cp -rf "$HOME/.boxctl/src/home/boxadmin/.config/systemd/user/." "$HOME/.config/systemd/user/"
 
-step "Strrting services"
-export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-systemctl --user daemon-reload
-systemctl --user enable boxctl-sockets-dir.service --now
-sudo systemctl enable angie --now
+step "Processing default files"
+sudo sed -i "s/__UPSTREAM__/127.0.0.1:8008/g" "/etc/angie/http.d/__DOMAIN__.conf"
+sudo sed -i "s/__DOMAIN__/$DOMAIN/g" "/etc/angie/http.d/__DOMAIN__.conf"
+sed -i "s|__PATH__|$PATH|g" "$HOME/.config/systemd/user/boxctl.service"
+sudo mv "/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
 
 step "Enabling linger"
 sudo loginctl enable-linger "$USER"
 
-step "Installing pnpm"
-curl -fsSL https://get.pnpm.io/install.sh | sh -
-export PNPM_HOME="$HOME/.local/share/pnpm"
-export PATH="$PNPM_HOME:$PATH"
-pnpm env use --global lts
+step "Enabling linger"
+sudo loginctl enable-linger "$USER"
+
+step "Starting services"
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+systemctl --user daemon-reload
+systemctl --user enable boxctl.service --now
+sudo systemctl enable angie --now

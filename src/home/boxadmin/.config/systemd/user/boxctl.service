@@ -1,0 +1,14 @@
+[Unit]
+Description=Boxctl
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/boxctl
+Environment=PORT=8008
+Environment=PATH=__PATH__
+ExecStart=pnpm node %h/boxctl/index.js
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
