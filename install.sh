@@ -123,6 +123,7 @@ sudo setfacl -d -m u:$(id -un):rwX /etc/angie/web/boxctl
 sudo setfacl -R -m u:$(id -un):rwX /etc/angie/http.d/
 sudo setfacl -d -m u:$(id -un):rwX /etc/angie/http.d/
 mkdir -p "$HOME/.config/containers/systemd"
+mkdir -p "$HOME/.config/systemd/user"
 
 step "Writing default files"
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/web/boxctl/." "/etc/angie/web/boxctl/"
