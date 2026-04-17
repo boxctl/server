@@ -122,6 +122,10 @@ esac
 step "Installing pnpm"
 install_pnpm
 
+step "Enabling linger"
+sudo loginctl enable-linger "$(id -un)"
+sudo systemctl start "user@$(id -u).service"
+
 step "Downloading required files"
 rm -rf "$HOME/.boxctl"
 git clone -q --depth 1 https://github.com/boxctl/server "$HOME/.boxctl"
@@ -140,16 +144,13 @@ step "Writing default files"
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/web/boxctl/." "/etc/angie/web/boxctl/"
 sudo cp -rf "$HOME/.boxctl/src/etc/angie/http.d/." "/etc/angie/http.d/"
 cp -rf "$HOME/.boxctl/src/home/boxadmin/.config/systemd/user/." "$HOME/.config/systemd/user/"
+cp -r "$HOME/.boxctl/src/home/boxadmin/boxctl" "$HOME/boxctl"
 
 step "Processing default files"
 sudo sed -i "s/__UPSTREAM__/127.0.0.1:8008/g" "/etc/angie/http.d/__DOMAIN__.conf"
 sudo sed -i "s/__DOMAIN__/$DOMAIN/g" "/etc/angie/http.d/__DOMAIN__.conf"
 sed -i "s|__PATH__|$PATH|g" "$HOME/.config/systemd/user/boxctl.service"
 sudo mv "/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
-
-step "Enabling linger"
-sudo loginctl enable-linger "$(id -un)"
-sudo systemctl start "user@$(id -u).service"
 
 step "Starting services"
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
