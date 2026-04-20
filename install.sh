@@ -155,5 +155,6 @@ sudo mv "/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
 step "Starting services"
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 systemctl --user daemon-reload
-echo systemctl --user enable boxctl.service --now
-echo sudo systemctl enable angie --now
+systemctl --user enable boxctl.service --now
+sudo systemctl enable angie --now
+sudo systemctl reload angie
