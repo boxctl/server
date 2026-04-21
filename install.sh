@@ -158,3 +158,13 @@ systemctl --user daemon-reload
 systemctl --user enable boxctl.service --now
 sudo systemctl enable angie --now
 sudo systemctl reload angie
+
+echo -e "${BOLD}${GREEN}
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                ┃
+┃     Installation Completed     ┃
+┃                                ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+${RESET}"
+step "You can now access Boxctl GUI at https://$DOMAIN"
+step "You might need to wait for a few seconds for the certificates to be issued."
