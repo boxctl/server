@@ -166,5 +166,5 @@ echo -e "${BOLD}${GREEN}
 ┃                                ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ${RESET}"
-step "You can now access Boxctl GUI at https://$DOMAIN"
 step "You might need to wait for a few seconds for the certificates to be issued."
+step "You can now access Boxctl GUI at https://$DOMAIN"
