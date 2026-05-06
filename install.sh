@@ -58,7 +58,7 @@ if ! sudo -v; then
 	exit 1
 fi
 if [[ "$EUID" -eq 0 ]]; then
-	error "Do not run this script as root user. Run it with a normal user with sudo access."
+	error "Do not run this script directly as root user. Run it with a normal user with sudo."
 	exit 1
 fi
 while true; do
@@ -85,27 +85,6 @@ echo -e "${BOLD}${ACCENT}DOMAIN    : ${RESET}${DOMAIN}"
 echo -e "${BOLD}${ACCENT}HOME      : ${RESET}${HOME}"
 echo ""
 
-install_ubuntu_debian() {
-	sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
-	sudo curl -fsSLo /etc/apt/trusted.gpg.d/angie-signing.gpg https://angie.software/keys/angie-signing.gpg
-	echo "deb https://download.angie.software/angie/$ID/$VERSION_ID $VERSION_CODENAME main" |
-		sudo tee /etc/apt/sources.list.d/angie.list >/dev/null
-	sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
-	sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q git podman jq angie acl
-}
-
-install_fedora() {
-	sudo tee /etc/yum.repos.d/angie.repo >/dev/null <<'EOF'
-[angie]
-name=Angie repo
-baseurl=https://download.angie.software/angie/fedora/$releasever/
-gpgcheck=1
-enabled=1
-gpgkey=https://angie.software/keys/angie-signing.gpg.asc
-EOF
-	sudo dnf install -y -q git podman jq angie acl
-}
-
 install_pnpm() {
 	curl -fsSL https://get.pnpm.io/install.sh | sh -
 	export PNPM_HOME="$HOME/.local/share/pnpm"
@@ -114,10 +93,12 @@ install_pnpm() {
 }
 
 step "Installing required packages for $PRETTY_NAME"
-case "$ID" in
-ubuntu | debian) install_ubuntu_debian ;;
-fedora) install_fedora ;;
-esac
+sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
+sudo curl -fsSLo /etc/apt/trusted.gpg.d/angie-signing.gpg https://angie.software/keys/angie-signing.gpg
+echo "deb https://download.angie.software/angie/$ID/$VERSION_ID $VERSION_CODENAME main" |
+	sudo tee /etc/apt/sources.list.d/angie.list >/dev/null
+sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q git podman jq angie acl
 
 step "Installing pnpm"
 install_pnpm
