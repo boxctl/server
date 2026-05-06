@@ -45,7 +45,7 @@ fi
 source /etc/os-release
 
 case "$ID-$VERSION_ID" in
-ubuntu-22.04 | ubuntu-24.04 | fedora-43 | debian-13) ;;
+ubuntu-22.04 | ubuntu-24.04 | debian-13) ;;
 *)
 	error "Unsupported OS: $PRETTY_NAME"
 	error "Supported: Ubuntu 22.04, Ubuntu 24.04, Fedora 43, Debian 13"
