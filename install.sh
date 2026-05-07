@@ -6,7 +6,7 @@
 # https://github.com/boxctl/server
 
 # Usage:
-# curl -fsSLo- "https://raw.githubusercontent.com/boxctl/server/refs/heads/main/install.sh" | bash
+# curl "https://raw.githubusercontent.com/boxctl/server/refs/heads/main/install.sh" | bash
 
 set -euo pipefail
 
@@ -128,9 +128,9 @@ cp -rf "$HOME/.boxctl/src/home/boxadmin/.config/systemd/user/." "$HOME/.config/s
 cp -r "$HOME/.boxctl/src/home/boxadmin/boxctl" "$HOME/boxctl"
 
 step "Processing default files"
-sudo sed -i "s/__UPSTREAM__/127.0.0.1:8008/g" "/etc/angie/http.d/__DOMAIN__.conf"
-sudo sed -i "s/__DOMAIN__/$DOMAIN/g" "/etc/angie/http.d/__DOMAIN__.conf"
+sudo sed -i "s|__DOMAIN__|$DOMAIN|g" "/etc/angie/http.d/__DOMAIN__.conf"
 sed -i "s|__PATH__|$PATH|g" "$HOME/.config/systemd/user/boxctl.service"
+sed -i "s|__DOMAIN__|$DOMAIN|g" "$HOME/.config/systemd/user/boxctl.service"
 sudo mv "/etc/angie/http.d/__DOMAIN__.conf" "/etc/angie/http.d/$DOMAIN.conf"
 
 step "Starting services"

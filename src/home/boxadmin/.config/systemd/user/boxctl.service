@@ -7,6 +7,7 @@ Type=simple
 WorkingDirectory=%h/boxctl
 Environment=PORT=8008
 Environment=PATH=__PATH__
+Environment=ORIGIN="https://__DOMAIN__"
 ExecSearchPath=__PATH__
 ExecStart=pnpm node %h/boxctl/index.js
 Restart=on-failure
