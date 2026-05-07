@@ -11,7 +11,7 @@
 set -euo pipefail
 
 DOMAIN=""
-BOXCTL_VERSION="v0.0.3"
+BOXCTL_VERSION="v0.0.4"
 VERIFICATION_STRING=$(tr -dc 'a-z0-9' </dev/urandom | head -c 16)
 
 BOLD='\033[1m'
