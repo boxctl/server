@@ -12,6 +12,7 @@ set -euo pipefail
 
 DOMAIN=""
 BOXCTL_VERSION="v0.0.3"
+VERIFICATION_STRING=$(tr -dc 'a-z0-9' </dev/urandom | head -c 16)
 
 BOLD='\033[1m'
 RED='\033[38;2;239;68;68m'
@@ -82,16 +83,10 @@ done
 
 echo ""
 echo -e "${BOLD}${ACCENT}SERVER OS : ${RESET}${PRETTY_NAME}"
+echo -e "${BOLD}${ACCENT}BOXCTL    : ${RESET}${BOXCTL_VERSION}"
 echo -e "${BOLD}${ACCENT}DOMAIN    : ${RESET}${DOMAIN}"
 echo -e "${BOLD}${ACCENT}HOME      : ${RESET}${HOME}"
 echo ""
-
-install_pnpm() {
-	curl -fsSL https://get.pnpm.io/install.sh | sh -
-	export PNPM_HOME="$HOME/.local/share/pnpm"
-	export PATH="$PNPM_HOME:$PATH"
-	pnpm env use --global lts
-}
 
 step "Installing required packages for $PRETTY_NAME"
 sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
@@ -99,10 +94,40 @@ sudo curl -fsSLo /etc/apt/trusted.gpg.d/angie-signing.gpg https://angie.software
 echo "deb https://download.angie.software/angie/$ID/$VERSION_ID $VERSION_CODENAME main" |
 	sudo tee /etc/apt/sources.list.d/angie.list >/dev/null
 sudo DEBIAN_FRONTEND=noninteractive apt-get update -q
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q git podman jq angie acl
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q git podman jq angie acl busybox
+
+step "Setting up verification server"
+sudo systemctl stop boxctl-verify 2>/dev/null || true
+sudo systemctl reset-failed boxctl-verify 2>/dev/null || true
+mkdir -p /tmp/boxctl-www && echo "$VERIFICATION_STRING" >/tmp/boxctl-www/index.html
+sudo systemd-run --unit=boxctl-verify busybox httpd -f -p 80 -h /tmp/boxctl-www
+
+step "Verifying domain connectivity"
+VERIFIED=false
+for i in {1..10}; do
+	RESPONSE=$(curl -fsSL --max-time 5 "http://${DOMAIN}" 2>/dev/null || true)
+	if [[ "$RESPONSE" == "$VERIFICATION_STRING" ]]; then
+		VERIFIED=true
+		break
+	fi
+	warn "Attempt $i/10 failed. Retrying in 5s..."
+	sleep 5
+done
+
+step "Stopping verification server"
+sudo systemctl stop boxctl-verify
+sudo systemctl reset-failed boxctl-verify 2>/dev/null || true
+rm -rf /tmp/boxctl-www
+if [[ "$VERIFIED" != "true" ]]; then
+	error "Domain verification failed. Ensure $DOMAIN points to this server."
+	exit 1
+fi
 
 step "Installing pnpm"
-install_pnpm
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+pnpm env use --global lts
 
 step "Enabling linger"
 sudo loginctl enable-linger "$(id -un)"
