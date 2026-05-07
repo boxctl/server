@@ -109,9 +109,9 @@ sudo loginctl enable-linger "$(id -un)"
 sudo systemctl start "user@$(id -u).service"
 
 step "Downloading required files"
-# need version tagging here
 rm -rf "$HOME/.boxctl"
-git clone -q --depth 1 https://github.com/boxctl/server "$HOME/.boxctl"
+mkdir -p "$HOME/.boxctl"
+curl -fsSL "https://github.com/boxctl/server/archive/refs/tags/${BOXCTL_VERSION}.tar.gz" | tar -xz --strip-components=1 -C "$HOME/.boxctl"
 
 step "Creating default directories"
 sudo mkdir -p "/etc/angie/web/boxctl"
