@@ -11,6 +11,7 @@
 set -euo pipefail
 
 DOMAIN=""
+BOXCTL_VERSION="v0.0.1"
 
 BOLD='\033[1m'
 RED='\033[38;2;239;68;68m'
@@ -108,6 +109,7 @@ sudo loginctl enable-linger "$(id -un)"
 sudo systemctl start "user@$(id -u).service"
 
 step "Downloading required files"
+# need version tagging here
 rm -rf "$HOME/.boxctl"
 git clone -q --depth 1 https://github.com/boxctl/server "$HOME/.boxctl"
 
