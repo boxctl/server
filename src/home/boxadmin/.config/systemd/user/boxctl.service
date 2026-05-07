@@ -12,6 +12,5 @@ ExecSearchPath=__PATH__
 ExecStart=pnpm node %h/boxctl/index.js
 Restart=on-failure
 
-
 [Install]
 WantedBy=default.target
