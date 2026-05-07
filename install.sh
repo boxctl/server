@@ -11,7 +11,7 @@
 set -euo pipefail
 
 DOMAIN=""
-BOXCTL_VERSION="v0.0.4"
+BOXCTL_VERSION="v0.0.5"
 
 BOLD='\033[1m'
 RED='\033[38;2;239;68;68m'
